@@ -1,0 +1,85 @@
+const Parser = require('rss-parser')
+let parser = new Parser();
+const {db, refreshCheck, videoDL} = require('./../utils')
+const path = require('path')
+
+class Task {
+  constructor (interval) {
+    this.interval = interval || 60 * 60 * 1000
+    this.queue = Promise.resolve()
+  }
+
+  runQueue(task) {
+    this.queue = this.queue.then(task).catch(e => {
+      throw e
+    })
+    return this.queue
+  }
+
+  run () {
+    let list = db.get('list').value()
+    // 更新 数据
+    Object.keys(list).forEach(site => {
+      list[site].forEach(name => {
+        this[site](name)
+      }
+    )})
+
+    // 下载视频
+    this.downloadVideo()
+  }
+
+  downloadVideo () {
+    let youtubes = db.get('youtube').value()
+
+    Object.keys(youtubes).forEach(youtube => {
+      youtubes[youtube].items.forEach((item, index) => {
+        this.runQueue(async () => {
+          if (item.url) {
+            console.log('Skip download: ' + item.title)
+            return Promise.resolve()
+          }
+
+          let pathname = path.resolve(__dirname, '../videos')
+          let filename = item.title.replace(/\//g, '_')
+          await videoDL(item.link, filename, pathname)
+          db.set(`youtube.${youtube}.items[${index}].url`, filename + '.mp4').write()
+          return Promise.resolve()
+        })
+      }
+    )})
+  }
+
+  youtube (name) {
+    return this.runQueue(async () => {
+      console.log(`task youtube start: ${name} 😀`)
+      let needRefresh = refreshCheck(`youtube.${name}.time`)
+      let feed
+      if (needRefresh) {
+        feed = await parser.parseURL(`https://rsshub-summerscar.herokuapp.com/youtube/user/${name}`);
+        feed.time = new Date().getTime()
+    
+        let preFeed = db.get(`youtube.${name}`).value()
+        if (!preFeed) {
+          db.set(`youtube.${name}`, feed).write()
+          console.log(`task youtube created: ${name} 😀`)
+        } else {
+          db.set(`youtube.${name}.time`, feed.time).write()
+          feed.items = feed.items.filter((item) => {
+            return !preFeed.items.find(preitem => preitem.title === item.title)
+          })
+          db.get(`youtube.${name}.items`).push(...feed.items).write()
+          feed = db.get(`youtube.${name}`)
+          console.log(`task youtube updated: ${name} 😀`)
+        }
+      } else {
+        feed = db.get(`youtube.${name}`)
+        console.log(`task youtube skipped: ${name} 😀`)
+      }
+      return Promise.resolve()
+    })
+  }
+}
+
+
+module.exports = Task
