@@ -39,11 +39,11 @@ let task = new Task()
 task.run()
 setInterval(() => {
   task.run()
-}, 1000 * 60 * 60)
+}, 1000 * 60)
 
 // error-handling
 app.on('error', (err, ctx) => {
-  console.error('server error', err, ctx)
+  console.error('server error', err)
 });
 
 module.exports = app

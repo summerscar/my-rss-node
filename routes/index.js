@@ -12,7 +12,8 @@ router.get('/', async (ctx, next) => {
 
 router.get('/youtube/:name', async (ctx, next) => {
   let {name} = ctx.params
-  feed = db.get(`youtube.${name}`)
+  feed = db.get(`youtube.${name}`).value()
+  feed.items = feed.items.sort((b, a) => +new Date(a.pubDate) - +new Date(b.pubDate))
   ctx.body = feed 
 })
 

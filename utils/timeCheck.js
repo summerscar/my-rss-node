@@ -1,5 +1,5 @@
 const db = require('./db')
-const TIMEEXPIRE = 1000 * 60 * 60
+const TIMEEXPIRE = 1000 * 60 * 30  //  30分钟检测一次rss
 
 module.exports = function (key) {
   let lastTime = db.get(key).value()
