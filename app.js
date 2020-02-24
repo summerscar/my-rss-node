@@ -39,7 +39,7 @@ let task = new Task()
 task.run()
 setInterval(() => {
   task.run()
-}, 1000 * 60)
+}, 1000 * 60 * 10)
 
 // error-handling
 app.on('error', (err, ctx) => {
