@@ -11,10 +11,10 @@ router.get('/', async (ctx, next) => {
 
 router.get('/youtube/:name', async (ctx, next) => {
   let {name} = ctx.params
-  let {rows} = await client.query(`SELECT * FROM videos WHERE name='${name}'`)
+  let {rows} = await client.query(`SELECT * FROM videos WHERE name='${name}' order by pubdate desc limit 20;`)
 
   ctx.body = {
-    items: rows.sort((b, a) => +new Date(a.pubdate) - +new Date(b.pubdate))
+    items: rows
   } 
 })
 
