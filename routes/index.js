@@ -12,7 +12,10 @@ router.get('/', async (ctx, next) => {
 router.get('/youtube/:name', async (ctx, next) => {
   let {name} = ctx.params
   let {rows} = await client.query(`SELECT * FROM videos WHERE name='${name}' order by pubdate desc limit 20;`)
-
+  let prefix = process.env.VIDEOURL || 'https://myrssvideo.s3.jp-tok.cloud-object-storage.appdomain.cloud/'
+  rows.forEach(item => {
+    item.url =  prefix + item.url
+  })
   ctx.body = {
     items: rows
   } 
