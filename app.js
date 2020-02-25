@@ -10,6 +10,7 @@ const index = require('./routes/index')
 const users = require('./routes/users')
 const Task = require('./task')
 const mount = require('koa-mount')
+const client = require('./pgsql') 
 // error handler
 onerror(app)
 

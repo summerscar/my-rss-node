@@ -1,8 +1,9 @@
 const Parser = require('rss-parser')
 let parser = new Parser();
-const {db, refreshCheck, videoDL} = require('./../utils')
+const {db, refreshCheck, videoDL, doCreateObject, doCreateBucket} = require('./../utils')
 const path = require('path')
 const fs = require('fs')
+const client = require('./../pgsql')
 class Task {
   constructor (interval) {
     this.interval = interval || 60 * 60 * 1000
@@ -16,8 +17,15 @@ class Task {
     return this.queue
   }
 
-  run () {
-    let list = db.get('list').value()
+  async run () {
+    // let list = db.get('list').value()
+    console.log(`🤞 Task running: ${new Date().toLocaleString()}`)
+    let {rows} = await client.query('SELECT * FROM list')
+    let list = {}
+    rows.forEach(item => {
+      list[item.site] = item.names
+    })
+    // list = list.rows
     // 更新 数据
     Object.keys(list).forEach(site => {
       list[site].forEach(name => {
@@ -26,31 +34,38 @@ class Task {
     )})
 
     // 下载视频
-    this.downloadVideo()
+    if (process.env.NODE_ENV !== 'development') {
+      this.downloadVideo()
+    }
+    // this.uploadVideo()
   }
-
   downloadVideo () {
-    this.runQueue(() => {
-      let youtubes = db.get('youtube').value()
+    this.runQueue(async () => {
+      let {rows} = await client.query("SELECT * FROM videos")
+
       let allVideos = fs.readdirSync(path.resolve(__dirname, '../videos'))
-      Object.keys(youtubes).forEach(youtube => {
-        youtubes[youtube].items.forEach((item, index) => {
-          this.runQueue(async () => {
-            let pathname = path.resolve(__dirname, '../videos')
-            let filename = item.title.replace(/\//g, '_')
+  
+      rows.forEach((item, index) => {
+        this.runQueue(async () => {
+          let pathname = path.resolve(__dirname, '../videos')
+          let filename = item.title.replace(/\//g, '_')
 
-            // 存在url且videos文件夹中存在时跳过
-            if (item.url && allVideos.find(videoname => videoname === filename + '.mp4')) {
-              console.log('Skip download: ' + item.title)
-              return Promise.resolve()
-            }
-
-            await videoDL(item.link, filename, pathname)
-            db.set(`youtube.${youtube}.items[${index}].url`, filename + '.mp4').write()
+          // 存在url且videos文件夹中存在时跳过
+          if (item.url) {
+            console.log('Skip download: ' + item.title)
             return Promise.resolve()
-          })
-        }
-      )})
+          }
+
+          await videoDL(item.link, filename, pathname)
+
+          await doCreateObject(`${filename}.mp4`, fs.readFileSync(path.resolve(pathname, filename + '.mp4')))
+          
+          console.log('👏 Upload success: ' + item.title)
+          let query = `UPDATE videos SET url = '${filename + '.mp4'}' WHERE ID = ${item.id};`
+          await client.query(query)
+          return Promise.resolve()
+        })
+      })
       return Promise.resolve()
     })
   }
@@ -58,29 +73,29 @@ class Task {
   youtube (name) {
     return this.runQueue(async () => {
       console.log(`task youtube start: ${name} 😀`)
-      let needRefresh = refreshCheck(`youtube.${name}.time`)
+      // let needRefresh = refreshCheck(`youtube.${name}.time`)
       let feed
-      if (needRefresh) {
-        feed = await parser.parseURL(`https://rsshub-summerscar.herokuapp.com/youtube/user/${name}`);
-        feed.time = new Date().getTime()
-    
-        let preFeed = db.get(`youtube.${name}`).value()
-        if (!preFeed) {
-          await db.set(`youtube.${name}`, feed).write()
-          console.log(`task youtube created: ${name} 😀`)
-        } else {
-          await db.set(`youtube.${name}.time`, feed.time).write()
-          feed.items = feed.items.filter((item) => {
-            return !preFeed.items.find(preitem => preitem.title === item.title)
-          })
-          await db.get(`youtube.${name}.items`).push(...feed.items).write()
-          feed = db.get(`youtube.${name}`)
-          console.log(`task youtube updated: ${name} 😀`)
+
+      feed = await parser.parseURL(`https://rsshub-summerscar.herokuapp.com/youtube/user/${name}`);
+      
+      let {rows} = await client.query(`SELECT * FROM videos WHERE name='${name}'`)
+      
+      // await db.set(`youtube.${name}.time`, feed.time).write()
+      // feed.items = feed.items.filter((item) => {
+      //   return !preFeed.items.find(preitem => preitem.title === item.title)
+      // })
+      let count = 0
+      for(let item of feed.items) {
+        if (rows.find(row => row.title === item.title)) break
+        let query = {
+          text: 'INSERT INTO videos(name, title, link, pubdate, content, contentsnippet, guid, isodate) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+          values: [name, item.title, item.link, item.pubDate, item.content, item.contentSnippet, item.guid, item.isoDate]
         }
-      } else {
-        feed = db.get(`youtube.${name}`)
-        console.log(`task youtube skipped: ${name} 😀`)
+        let result = await client.query(query)
+        count++
       }
+    
+      console.log(`task youtube updated: ${name} videos: ${count} 😀`)
       return Promise.resolve()
     })
   }

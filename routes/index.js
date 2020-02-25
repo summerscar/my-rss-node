@@ -1,7 +1,6 @@
 const router = require('koa-router')()
-const Parser = require('rss-parser')
-let parser = new Parser();
 const {db, refreshCheck} = require('./../utils')
+const client = require('./../pgsql')
 
 router.prefix('/api')
 router.get('/', async (ctx, next) => {
@@ -12,9 +11,11 @@ router.get('/', async (ctx, next) => {
 
 router.get('/youtube/:name', async (ctx, next) => {
   let {name} = ctx.params
-  feed = db.get(`youtube.${name}`).value()
-  feed.items = feed.items.sort((b, a) => +new Date(a.pubDate) - +new Date(b.pubDate))
-  ctx.body = feed 
+  let {rows} = await client.query(`SELECT * FROM videos WHERE name='${name}'`)
+
+  ctx.body = {
+    items: rows.sort((b, a) => +new Date(a.pubdate) - +new Date(b.pubdate))
+  } 
 })
 
 router.get('/json', async (ctx, next) => {
