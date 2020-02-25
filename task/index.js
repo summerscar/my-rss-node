@@ -41,20 +41,12 @@ class Task {
   }
   downloadVideo () {
     this.runQueue(async () => {
-      let {rows} = await client.query("SELECT * FROM videos")
+      let {rows} = await client.query("SELECT * FROM videos WHERE url IS NULL")
 
-      let allVideos = fs.readdirSync(path.resolve(__dirname, '../videos'))
-  
       rows.forEach((item, index) => {
         this.runQueue(async () => {
           let pathname = path.resolve(__dirname, '../videos')
           let filename = item.title.replace(/\//g, '_')
-
-          // 存在url且videos文件夹中存在时跳过
-          if (item.url) {
-            console.log('Skip download: ' + item.title)
-            return Promise.resolve()
-          }
 
           await videoDL(item.link, filename, pathname)
 
