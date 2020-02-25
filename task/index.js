@@ -30,26 +30,29 @@ class Task {
   }
 
   downloadVideo () {
-    let youtubes = db.get('youtube').value()
-    let allVideos = fs.readdirSync(path.resolve(__dirname, '../videos'))
-    Object.keys(youtubes).forEach(youtube => {
-      youtubes[youtube].items.forEach((item, index) => {
-        this.runQueue(async () => {
-          let pathname = path.resolve(__dirname, '../videos')
-          let filename = item.title.replace(/\//g, '_')
+    this.runQueue(() => {
+      let youtubes = db.get('youtube').value()
+      let allVideos = fs.readdirSync(path.resolve(__dirname, '../videos'))
+      Object.keys(youtubes).forEach(youtube => {
+        youtubes[youtube].items.forEach((item, index) => {
+          this.runQueue(async () => {
+            let pathname = path.resolve(__dirname, '../videos')
+            let filename = item.title.replace(/\//g, '_')
 
-          // 存在url且videos文件夹中存在时跳过
-          if (item.url && allVideos.find(videoname => videoname === filename + '.mp4')) {
-            console.log('Skip download: ' + item.title)
+            // 存在url且videos文件夹中存在时跳过
+            if (item.url && allVideos.find(videoname => videoname === filename + '.mp4')) {
+              console.log('Skip download: ' + item.title)
+              return Promise.resolve()
+            }
+
+            await videoDL(item.link, filename, pathname)
+            db.set(`youtube.${youtube}.items[${index}].url`, filename + '.mp4').write()
             return Promise.resolve()
-          }
-
-          await videoDL(item.link, filename, pathname)
-          db.set(`youtube.${youtube}.items[${index}].url`, filename + '.mp4').write()
-          return Promise.resolve()
-        })
-      }
-    )})
+          })
+        }
+      )})
+      return Promise.resolve()
+    })
   }
 
   youtube (name) {
@@ -63,14 +66,14 @@ class Task {
     
         let preFeed = db.get(`youtube.${name}`).value()
         if (!preFeed) {
-          db.set(`youtube.${name}`, feed).write()
+          await db.set(`youtube.${name}`, feed).write()
           console.log(`task youtube created: ${name} 😀`)
         } else {
-          db.set(`youtube.${name}.time`, feed.time).write()
+          await db.set(`youtube.${name}.time`, feed.time).write()
           feed.items = feed.items.filter((item) => {
             return !preFeed.items.find(preitem => preitem.title === item.title)
           })
-          db.get(`youtube.${name}.items`).push(...feed.items).write()
+          await db.get(`youtube.${name}.items`).push(...feed.items).write()
           feed = db.get(`youtube.${name}`)
           console.log(`task youtube updated: ${name} 😀`)
         }
