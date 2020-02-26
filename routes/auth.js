@@ -1,7 +1,8 @@
 const router = require('koa-router')()
 const client = require('./../pgsql')
+const {translateText} = require('./../utils')
 
-router.prefix('/api')
+router.prefix('/api/auth')
 
 router.get('/youtube/:name', async (ctx, next) => {
   let {offset} = ctx.query
@@ -14,6 +15,15 @@ router.get('/youtube/:name', async (ctx, next) => {
   ctx.body = {
     items: rows
   } 
+})
+router.get('/translate', async (ctx, next) => {
+  let content = ctx.query.content
+  try {
+    let result = await translateText(content)
+    ctx.body = {result}
+  } catch(err) {
+    ctx.body = {err}
+  }
 })
 
 module.exports = router

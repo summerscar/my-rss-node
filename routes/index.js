@@ -1,5 +1,4 @@
 const router = require('koa-router')()
-const {db, refreshCheck} = require('./../utils')
 const client = require('./../pgsql')
 
 router.prefix('/api')
@@ -9,7 +8,7 @@ router.get('/', async (ctx, next) => {
   })
 })
 
-router.get('/free/youtube/:name', async (ctx, next) => {
+router.get('/youtube/:name', async (ctx, next) => {
   let {offset} = ctx.query
   let {name} = ctx.params
   let {rows} = await client.query(`SELECT * FROM videos WHERE name='${name}' AND url IS NOT NULL order by isodate desc limit 4;`)
