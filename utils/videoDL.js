@@ -22,7 +22,7 @@ function videoDL (url, filename, pathname) {
     })
      
     video.on('end', function() {
-      console.log(`Download finished: ${filename}`)
+      console.log(`Download complete: ${filename}`)
       resolve()
     })
     console.log('Download started:' + filename)

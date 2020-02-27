@@ -34,7 +34,7 @@ class Task {
     )})
 
     // 下载视频
-    if (process.env.NODE_ENV !== 'development') {
+    if (process.env.NODE_ENV !== 'development' && process.env.STATUS === 'RUN') {
       this.downloadVideo()
     }
     // this.uploadVideo()
