@@ -11,5 +11,5 @@ RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak
 RUN mv sources.list /etc/apt/
 RUN apt-get update
 RUN apt-get install libmecab2 libmecab-dev mecab mecab-ipadic mecab-ipadic-utf8 mecab-utils
-RUN npm install --registry=https://registry.npm.taobao.org
+RUN yarn
 CMD ["npm", "run", "start"]%

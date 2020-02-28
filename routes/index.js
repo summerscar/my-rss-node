@@ -1,7 +1,5 @@
 const router = require('koa-router')()
 const client = require('./../pgsql')
-const MeCab = new require('mecab-async')
-mecab = new MeCab()
 
 router.prefix('/api')
 router.get('/', async (ctx, next) => {
@@ -21,24 +19,6 @@ router.get('/youtube/:name', async (ctx, next) => {
   ctx.body = {
     items: rows
   } 
-})
-router.get('/mecab', async (ctx, next) => {
-  let conent = ctx.query.content
-  console.log(conent)
-  let promise = new Promise((resolve, reject) => {
-    mecab.wakachi(conent, function(err, result) {
-        if (err) {
-          console.log('err', err)
-          reject()
-        }
-        resolve(result)
-    });
-  })
-
- let result = await promise
-  ctx.body = {
-    result: result.join(' ')
-  }
 })
 
 router.get('/json', async (ctx, next) => {
