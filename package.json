@@ -12,13 +12,16 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "aws-sdk": "^2.627.0",
     "debug": "^4.1.1",
     "env-cmd": "^10.1.0",
     "ibm-cos-sdk": "^1.6.0",
+    "jwks-rsa": "^1.7.0",
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
     "koa-convert": "^1.2.0",
     "koa-json": "^2.0.2",
+    "koa-jwt": "^3.6.0",
     "koa-logger": "^3.2.0",
     "koa-mount": "^4.0.0",
     "koa-onerror": "^4.1.0",
@@ -29,6 +32,7 @@
     "mecab-async": "^0.1.2",
     "pg": "^7.18.2",
     "pug": "^2.0.3",
+    "request": "^2.88.2",
     "rss-parser": "^3.7.5",
     "youtube-dl": "^3.0.2"
   },

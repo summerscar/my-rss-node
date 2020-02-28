@@ -3,3 +3,4 @@ db.json
 .env
 .vscode/
 .denv
+yarn.lock

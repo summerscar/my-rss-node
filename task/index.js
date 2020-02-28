@@ -34,7 +34,7 @@ class Task {
     )})
 
     // 下载视频
-    if (process.env.NODE_ENV !== 'development') {
+    if (process.env.NODE_ENV !== 'development' && process.env.STATUS === 'RUN') {
       this.downloadVideo()
     }
     // this.uploadVideo()
@@ -47,9 +47,13 @@ class Task {
         this.runQueue(async () => {
           let pathname = path.resolve(__dirname, '../videos')
           let filename = item.title.replace(/\//g, '_')
-
-          await videoDL(item.link, filename, pathname)
-
+          try {
+            await videoDL(item.link, filename, pathname)
+          } catch (e) {
+            console.log('Download ERR: ', e)
+            return Promise.resolve()
+          }
+          
           await doCreateObject(`${filename}.mp4`, fs.readFileSync(path.resolve(pathname, filename + '.mp4')))
           
           console.log('👏 Upload success: ' + item.title)

@@ -1,10 +1,17 @@
-const AWS = require('ibm-cos-sdk');
 
 const credsString = process.env.OBJECT_STORE_CREDS
 const config = JSON.parse(credsString);
-const Bucket = process.env.Bucket  
-const cos = new AWS.S3(config);
- 
+const Bucket = process.env.Bucket
+let AWS
+let cos 
+if (process.env.AWS_ACCESS_KEY_ID) {
+    AWS = require('aws-sdk');
+    cos = new AWS.S3();
+} else {
+    AWS = require('ibm-cos-sdk');
+    cos = new AWS.S3(config);
+}
+
 function doCreateBucket() {
     console.log('Creating bucket');
     return cos.createBucket({
