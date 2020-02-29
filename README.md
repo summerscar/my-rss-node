@@ -16,6 +16,13 @@ https://my-rss-node.herokuapp.com/
 4. 更新Postgresql数据
 5. 生成前端接口
 
-## Todo
+## Feature
 
 * 翻译新闻文本内容
+* 假名注音
+
+## ScreenShot
+
+![](./preview/screenshot1.png)
+![](./preview/screenshot2.png)
+![](./preview/screenshot3.png)
