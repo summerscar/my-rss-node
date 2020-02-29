@@ -1,9 +1,8 @@
 const router = require('koa-router')()
 const client = require('./../pgsql')
 const {translateText} = require('./../utils')
-const MeCab = new require('mecab-async')
-mecab = new MeCab()
-
+const request = require('request')
+var convert = require('xml-js')
 router.prefix('/api/auth')
 
 router.get('/youtube/:name', async (ctx, next) => {
@@ -18,7 +17,7 @@ router.get('/youtube/:name', async (ctx, next) => {
     items: rows
   } 
 })
-
+/*
 router.post('/mecab', async (ctx, next) => {
   let content = ctx.request.body.content
   let promise = new Promise((resolve, reject) => {
@@ -34,6 +33,35 @@ router.post('/mecab', async (ctx, next) => {
  let result = await promise
   ctx.body = {
     result: result
+  }
+})
+*/
+router.post('/furigana', async (ctx, next) => {
+  let {content, grade} = ctx.request.body
+  let options = {
+    method: 'GET',
+    url: 'https://jlp.yahooapis.jp/FuriganaService/V1/furigana',
+    qs: {
+      'appid': process.env.YAHOO,
+      'grade': grade || 6,
+      'sentence': content
+    },
+    headers: {
+      'Content-type': 'application/json'
+    }
+  };
+  try {
+    let promise = new Promise((resolve, reject) => {
+      request(options, function(err, res, body) {
+        if (err) reject()
+        let result = JSON.parse(convert.xml2json(body, {compact: true, spaces: 4}))
+        resolve(result.ResultSet && result.ResultSet.Result)
+      })
+    })
+    let result = await promise 
+    ctx.body = result
+  } catch (e) {
+    console.log(e)
   }
 })
 
