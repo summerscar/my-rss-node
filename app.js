@@ -11,7 +11,7 @@ const users = require('./routes/users')
 const auth = require('./routes/auth')
 const Task = require('./task')
 const mount = require('koa-mount')
-const client = require('./pgsql') 
+const cors = require('koa2-cors')
 const jwt = require('koa-jwt');
 const jwksRsa = require('jwks-rsa')
 const authConfig = {
@@ -21,6 +21,16 @@ const authConfig = {
 }
 // error handler
 onerror(app)
+
+app.use(cors({
+  origin: function(ctx) {
+    console.log(ctx.path)
+    if (ctx.path === '/api/kousei') {
+      return '*';
+    }
+    return false;
+  }
+}));
 
 app.use(function(ctx, next){
   return next().catch((err) => {

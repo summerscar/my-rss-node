@@ -1,5 +1,7 @@
 const router = require('koa-router')()
 const client = require('./../pgsql')
+const request = require('request')
+const convert = require('xml-js')
 
 router.prefix('/api')
 router.get('/', async (ctx, next) => {
@@ -19,6 +21,35 @@ router.get('/youtube/:name', async (ctx, next) => {
   ctx.body = {
     items: rows
   } 
+})
+
+router.get('/kousei', async (ctx, next) => {
+  // let {content} = ctx.request.body
+  let {content} = ctx.query
+  let options = {
+    method: 'GET',
+    url: 'https://jlp.yahooapis.jp/KouseiService/V1/kousei',
+    qs: {
+      'appid': process.env.YAHOO,
+      'sentence': content
+    },
+    headers: {
+      'Content-type': 'application/json'
+    }
+  };
+  try {
+    let promise = new Promise((resolve, reject) => {
+      request(options, function(err, res, body) {
+        if (err) reject()
+        let result = JSON.parse(convert.xml2json(body, {compact: true, spaces: 4}))
+        resolve(result.ResultSet && result.ResultSet.Result)
+      })
+    })
+    let result = await promise 
+    ctx.body = result
+  } catch (e) {
+    console.log(e)
+  }
 })
 
 router.get('/json', async (ctx, next) => {
