@@ -60,8 +60,12 @@ function updateUser (authorization, userid, id, title, area) {
       user_metadata[area] = []
     }
     console.log(user_metadata)
-
-    !user_metadata[area].find(item => item.id === id) && user_metadata[area].push({id, title, time: new Date().getTime()})
+    if (user_metadata[area].findIndex(item => item.id === id) === -1) {
+      user_metadata[area].push({id, title, time: new Date().getTime()})
+    } else {
+      if (area === 'watched') return
+      user_metadata[area].splice(user_metadata[area].findIndex(item => item.id === id), 1)
+    } 
 
     const options = {
       method: 'PATCH',

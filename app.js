@@ -14,11 +14,11 @@ const mount = require('koa-mount')
 const cors = require('koa2-cors')
 const jwt = require('koa-jwt');
 const jwksRsa = require('jwks-rsa')
-
+const { historyApiFallback } = require('koa2-connect-history-api-fallback');
 const authConfig = require('./utils/config')
 // error handler
 onerror(app)
-
+app.use(historyApiFallback({ whiteList: ['/api'] }));
 app.use(cors({
   origin: function(ctx) {
     console.log(ctx.path)
@@ -48,7 +48,17 @@ app.use(json())
 // app.use(logger())
 app.use(require('koa-static')(__dirname + '/build'))
 
-app.use(mount('/videos', server('videos', {maxage: 360 * 24 * 60 * 60 * 1000})));
+app.use(function(ctx, next){
+  return next().catch((err) => {
+    if (401 == err.status) {
+      ctx.status = 401;
+      ctx.body = '401 未登录';
+    } else {
+      throw err;
+    }
+  });
+});
+
 // logger
 app.use(async (ctx, next) => {
   const start = new Date()
@@ -72,7 +82,7 @@ app.use(jwt({
   audience: authConfig.audience,
   issuer: `https://${authConfig.domain}/`,
   algorithm: ["RS256"]
-}));
+}).unless({ path: [/^\/auth0_callback/] }));
 
 app.use(auth.routes(), auth.allowedMethods())
 
