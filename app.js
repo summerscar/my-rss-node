@@ -14,11 +14,8 @@ const mount = require('koa-mount')
 const cors = require('koa2-cors')
 const jwt = require('koa-jwt');
 const jwksRsa = require('jwks-rsa')
-const authConfig = {
-  "domain": "dev-ymyh-0n9.auth0.com",
-  "clientId": "U9Ypez6umr0NvVSRxPfcTwEgj8WGIz6p",
-  "audience": "https://dev-ymyh-0n9.auth0.com/api/v2/"
-}
+
+const authConfig = require('./utils/config')
 // error handler
 onerror(app)
 

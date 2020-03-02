@@ -2,7 +2,7 @@ const router = require('koa-router')()
 const client = require('./../pgsql')
 const request = require('request')
 const convert = require('xml-js')
-
+// const { getBearer } = require('./../utils/auth')
 router.prefix('/api')
 router.get('/', async (ctx, next) => {
   await ctx.render('index', {
@@ -22,6 +22,11 @@ router.get('/youtube/:name', async (ctx, next) => {
     items: rows
   } 
 })
+
+// router.get('/auth0/getBearer', async (ctx, next) => {
+//   let res = await getBearer()
+//   ctx.body = res
+// })
 
 router.get('/kousei', async (ctx, next) => {
   // let {content} = ctx.request.body

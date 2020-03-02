@@ -2,7 +2,8 @@ const router = require('koa-router')()
 const client = require('./../pgsql')
 const {translateText} = require('./../utils')
 const request = require('request')
-var convert = require('xml-js')
+const convert = require('xml-js')
+const {updateUser} = require('./../utils/auth')
 router.prefix('/api/auth')
 
 router.get('/youtube/:name', async (ctx, next) => {
@@ -16,6 +17,16 @@ router.get('/youtube/:name', async (ctx, next) => {
   ctx.body = {
     items: rows
   } 
+})
+
+router.get('/videoSearch/:id', async (ctx, next) => {
+  let {id} = ctx.params
+  let {rows} = await client.query(`SELECT * FROM videos WHERE id=${id};`)
+  let prefix = process.env.VIDEOURL || 'https://myrssvideo.s3.jp-tok.cloud-object-storage.appdomain.cloud/'
+  rows.forEach(item => {
+    item.url =  prefix + item.url
+  })
+  ctx.body = rows.length && rows[0]
 })
 /*
 router.post('/mecab', async (ctx, next) => {
@@ -71,6 +82,28 @@ router.post('/translate', async (ctx, next) => {
     let result = await translateText(content)
     ctx.body = {result}
   } catch(err) {
+    ctx.body = {err}
+  }
+})
+
+router.post('/like', async (ctx, next) => {
+  let {id, userId, title} = ctx.request.body
+  try {
+    let res = await updateUser(ctx.headers.authorization, userId, id, title, 'likes')
+    ctx.body = res
+  } catch(err) {
+    console.log(err)
+    ctx.body = {err}
+  }
+})
+
+router.post('/watched', async (ctx, next) => {
+  let {id, userId, title} = ctx.request.body
+  try {
+    let res = await updateUser(ctx.headers.authorization, userId, id, title, 'watched')
+    ctx.body = res
+  } catch(err) {
+    console.log(err)
     ctx.body = {err}
   }
 })
