@@ -20,9 +20,18 @@ https://my-rss-node.herokuapp.com/
 
 * 翻译新闻文本内容
 * 假名注音
+* 收藏
+
+## 环境变量
+
+|  AUTH0SECRET   | auth0 secret  |
+|  ----  | ----  |
+| 单元格  | 单元格 |
+| 单元格  | 单元格 |
 
 ## ScreenShot
 
-![](./preview/screenshot1.png)
-![](./preview/screenshot2.png)
-![](./preview/screenshot3.png)
+![](./preview/01.png)
+![](./preview/02.png)
+![](./preview/03.png)
+![](./preview/04.png)
