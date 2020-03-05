@@ -28,6 +28,14 @@ router.get('/videoSearch/:id', async (ctx, next) => {
   })
   ctx.body = rows.length && rows[0]
 })
+
+router.post('/videoPrev', async (ctx, next) => {
+  let {isodate, name} = ctx.request.body
+  let {rows} = await client.query(`SELECT * FROM videos WHERE isodate<'${isodate}' AND name='${name}' AND url IS NOT NULL ORDER BY isodate DESC LIMIT 1;`)
+
+  ctx.body = rows.length && rows[0]
+})
+
 /*
 router.post('/mecab', async (ctx, next) => {
   let content = ctx.request.body.content
