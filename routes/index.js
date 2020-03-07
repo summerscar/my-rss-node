@@ -23,10 +23,23 @@ router.get('/youtube/:name', async (ctx, next) => {
   } 
 })
 
-// router.get('/auth0/getBearer', async (ctx, next) => {
-//   let res = await getBearer()
-//   ctx.body = res
-// })
+router.get('/updateContent/:name', async (ctx, next) => {
+  let {name} = ctx.params
+  let {rows} = await client.query(`SELECT content,id FROM videos WHERE name='${name}';`)
+  rows = rows.map(item => {
+    return {
+      ...item,
+      contentsnippet: item.content.replace(/<iframe.*<\/iframe>(.*)<img.*>/, "$1")
+    }
+  })
+  for (let item of rows) {
+    let query = `UPDATE videos SET contentsnippet='${item.contentsnippet}' WHERE ID = ${item.id};`
+    await client.query(query)
+  }
+  // string
+  // contentsnippet
+  ctx.body = 'ok'
+})
 
 router.get('/kousei', async (ctx, next) => {
   // let {content} = ctx.request.body

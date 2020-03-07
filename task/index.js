@@ -1,6 +1,6 @@
 const Parser = require('rss-parser')
 let parser = new Parser();
-const {db, refreshCheck, videoDL, doCreateObject, doCreateBucket} = require('./../utils')
+const {db, refreshCheck, videoDL, doCreateObject, ytb} = require('./../utils')
 const path = require('path')
 const fs = require('fs')
 const client = require('./../pgsql')
@@ -70,9 +70,28 @@ class Task {
     return this.runQueue(async () => {
       console.log(`task youtube start: ${name} 😀`)
       // let needRefresh = refreshCheck(`youtube.${name}.time`)
+      const playlistId = (await ytb.getChannelWithUsername(name, 'contentDetails')).data.items[0].contentDetails.relatedPlaylists.uploads;
+      const data = (await ytb.getPlaylistItems(playlistId, 'snippet,contentDetails')).data.items;
       let feed
-
-      feed = await parser.parseURL(`https://rsshub-summerscar.herokuapp.com/youtube/user/${name}`);
+      feed = data
+      .filter((d) => d.snippet.title !== 'Private video' && d.snippet.title !== 'Deleted video')
+      .map((item) => {
+          const snippet = item.snippet;
+          const videoId = snippet.resourceId.videoId;
+          const img = ytb.getThumbnail(snippet.thumbnails);
+          return {
+              title: snippet.title,
+              content: `${
+                  '<iframe id="ytplayer" type="text/html" width="640" height="360" src="https://www.youtube.com/embed/' + videoId + '" frameborder="0" allowfullscreen></iframe>'
+              }${ytb.formatDescription(snippet.description)}<img src="${img.url}">`,
+              pubDate: new Date(snippet.publishedAt).toUTCString(),
+              link: `https://www.youtube.com/watch?v=${videoId}`,
+              contentSnippet: ytb.formatDescription(snippet.description),
+              guid: `https://www.youtube.com/watch?v=${videoId}`,
+              isoDate: new Date(snippet.publishedAt).toISOString()
+          };
+      })
+      // feed = await parser.parseURL(`https://rsshub-summerscar.herokuapp.com/youtube/user/${name}`);
       
       let {rows} = await client.query(`SELECT * FROM videos WHERE name='${name}'`)
       
@@ -81,8 +100,8 @@ class Task {
       //   return !preFeed.items.find(preitem => preitem.title === item.title)
       // })
       let count = 0
-      for(let item of feed.items) {
-        if (rows.find(row => row.title === item.title)) break
+      for(let item of feed) {
+        if (rows.find(row => row.title === item.title)) continue
         let query = {
           text: 'INSERT INTO videos(name, title, link, pubdate, content, contentsnippet, guid, isodate) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
           values: [name, item.title, item.link, item.pubDate, item.content, item.contentSnippet, item.guid, item.isoDate]
