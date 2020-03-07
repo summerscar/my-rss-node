@@ -101,7 +101,8 @@ class Task {
       // })
       let count = 0
       for(let item of feed) {
-        if (rows.find(row => row.title === item.title)) continue
+        let {rows} = await client.query(`SELECT * FROM videos WHERE title='${item.title}'`)
+        if (rows.length) continue
         let query = {
           text: 'INSERT INTO videos(name, title, link, pubdate, content, contentsnippet, guid, isodate) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
           values: [name, item.title, item.link, item.pubDate, item.content, item.contentSnippet, item.guid, item.isoDate]
