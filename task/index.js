@@ -41,7 +41,8 @@ class Task {
   }
   downloadVideo () {
     this.runQueue(async () => {
-      let {rows} = await client.query("SELECT * FROM videos WHERE url IS NULL")
+      let yesterday = new Date(new Date().getTime() - 24 * 60 * 60 * 1000).toISOString()
+      let {rows} = await client.query(`SELECT * FROM videos WHERE url IS NULL AND isodate > '${yesterday}'`)
 
       rows.forEach((item, index) => {
         this.runQueue(async () => {
@@ -53,9 +54,9 @@ class Task {
             console.log('Download ERR: ', e)
             return Promise.resolve()
           }
-          
+
           await doCreateObject(`${filename}.mp4`, fs.readFileSync(path.resolve(pathname, filename + '.mp4')))
-          
+
           console.log('👏 Upload success: ' + item.title)
           let query = `UPDATE videos SET url = '${filename + '.mp4'}' WHERE ID = ${item.id};`
           await client.query(query)
@@ -92,9 +93,9 @@ class Task {
           };
       })
       // feed = await parser.parseURL(`https://rsshub-summerscar.herokuapp.com/youtube/user/${name}`);
-      
+
       let {rows} = await client.query(`SELECT * FROM videos WHERE name='${name}'`)
-      
+
       // await db.set(`youtube.${name}.time`, feed.time).write()
       // feed.items = feed.items.filter((item) => {
       //   return !preFeed.items.find(preitem => preitem.title === item.title)
@@ -110,7 +111,7 @@ class Task {
         let result = await client.query(query)
         count++
       }
-    
+
       console.log(`task youtube updated: ${name} videos: ${count} 😀`)
       return Promise.resolve()
     })
