@@ -16,18 +16,16 @@ https://my-rss-node.herokuapp.com/
 4. 更新Postgresql数据
 5. 生成前端接口
 
+## 第三方API服务
+
+1. [微软文本翻译API](https://www.microsoft.com/zh-cn/translator/business/translator-api/)
+2. [YAHOO 文本解析 ルビ振り](https://developer.yahoo.co.jp/webapi/jlp/furigana/v1/furigana.html)
+
 ## Feature
 
 * 翻译新闻文本内容
 * 假名注音
 * 收藏
-
-## 环境变量
-
-|  AUTH0SECRET   | auth0 secret  |
-|  ----  | ----  |
-| 单元格  | 单元格 |
-| 单元格  | 单元格 |
 
 ## ScreenShot
 
