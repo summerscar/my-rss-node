@@ -23,12 +23,15 @@ https://my-rss-node.herokuapp.com/
 
 ## Feature
 
+* ANN news & MAIDIGI TV
+* 大屏支持
 * 翻译新闻文本内容
 * 假名注音
 * 收藏
 
 ## ScreenShot
 
+![](./preview/05.png)
 ![](./preview/01.png)
 ![](./preview/02.png)
 ![](./preview/03.png)
